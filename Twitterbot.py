@@ -17,19 +17,17 @@ def retrieve_last_ID(file_name):
     f_read.close()
     return since_id
 
-#def store_last_ID(since_id, file_name):
+def store_last_ID(since_id, file_name):
     f_write = open(file_name, 'w')
     f_write.write(str(since_id))
     f_write.close()
     return
- 
-since_id = retrieve_last_ID(FILE_NAME)
 
-mentions = api.mentions_timeline(since_id)
+mentions = tweepy.Cursor(api.mentions_timeline, since_id = 1580775726541729792).items()
 
-for mention in reversed(mentions):
+for mention in mentions:
     #if last_ID != mention.id:
-        print(str(mention.id) + '  --  ' + mention.text)
-        if '#helloworld'in mention.text.lower():
-            print("'Hello World' found! -> nxt step")
-      
+    print(str(mention.id) + '  --  ' + mention.text)
+    if '#helloworld'in mention.text.lower():
+        print("'Hello World' found! -> nxt step")
+        api.update_status(status = 'Winner', in_reply_to_status_id = mention.id , auto_populate_reply_metadata=True)
