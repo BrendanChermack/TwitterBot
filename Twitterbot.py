@@ -1,5 +1,6 @@
 import tweepy
- 
+import json
+
 CONSUMER_KEY = 'JZ55eKoTQdXyYDj669qiZ0DWG'  
 CONSUMER_SECRET = 'BJcFL8O5MP7mUBxV6ERoe8g4J4XZMeprP3zdUWxScrjCdhDnV3'
 ACCESS_KEY = '1575625171935072256-OTEpNQ3BZEeuh53MrNuXRxfe9ZykRx' 
@@ -8,26 +9,41 @@ ACCESS_SECRET = 'tnJ51o8VyZSEXpegZwzDTc5tWj3GKfBDpK8GIEy1C0Ay2'
 auth = tweepy.OAuthHandler(CONSUMER_KEY, CONSUMER_SECRET)
 auth.set_access_token(ACCESS_KEY, ACCESS_SECRET)
 api = tweepy.API(auth)
-        
-FILE_NAME = 'last_ID.txt'
 
-def retrieve_last_ID(file_name):
-    f_read = open(file_name, 'r')
-    since_id = int(f_read.read().strip())
-    f_read.close()
-    return since_id
+def storedData( type, new_data ):
+    if( type ) == "read":
+        with open( 'DATA_FILE.json','r+' ) as USERDATA:
+            file_data = json.load( USERDATA )
+            return file_data
+    elif( type ) == "write":
+        with open( 'DATA_FILE.json','w' ) as USERDATA:
+            USERDATA.write( new_data )
 
-def store_last_ID(since_id, file_name):
-    f_write = open(file_name, 'w')
-    f_write.write(str(since_id))
-    f_write.close()
-    return
+def writeJsonData( last_id ):
+    stored_new = {
+        "info": [
+            {
+                "id": last_id 
+            },
+        ]
+    }
+    sent_data = json.dumps( stored_new, indent = 4 )
+    storedData( "write", sent_data )
 
-mentions = tweepy.Cursor(api.mentions_timeline, since_id = 1580775726541729792).items()
+def getID():
+    id_stored = storedData( "read", None )[ "info" ][ 0 ][ "id" ]
+    return id_stored
+
+#get data from tingy
+stored_id = getID()
+
+mentions = tweepy.Cursor(api.mentions_timeline, since_id = stored_id).items(15)
 
 for mention in mentions:
-    #if last_ID != mention.id:
-    print(str(mention.id) + '  --  ' + mention.text)
-    if '#helloworld'in mention.text.lower():
-        print("'Hello World' found! -> nxt step")
-        api.update_status(status = 'Winner', in_reply_to_status_id = mention.id , auto_populate_reply_metadata=True)
+    print(str(mention.id) + ' -- ' + mention.text)
+    #Writes the most recent id in the json file 
+    writeJsonData(int(mention.id))
+    if mention.id is not stored_id: 
+        if 'summoned' in mention.text.lower():
+            print("'#summoned' found --> sending bot reply")
+            api.update_status(status = 'You Called?', in_reply_to_status_id = mention.id, auto_populate_reply_metadata=True)
