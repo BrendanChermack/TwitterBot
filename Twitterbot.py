@@ -34,8 +34,7 @@ def getID(): # gets the last id from the json
     id_stored = storedData( "read", None )[ "info" ][ 0 ][ "id" ]
     return id_stored
 
-#get data from json
-stored_id = getID()
+stored_id = getID()#get data from json
 
 mentions = tweepy.Cursor(api.mentions_timeline, since_id = stored_id).items(15)
 
@@ -44,5 +43,5 @@ for mention in mentions:
     writeJsonData(int(mention.id))#Writes the most recent id in the json file 
     if mention.id > stored_id: # tells if the id has pervoiusly been stored
         if 'summoned' in mention.text.lower(): #determins if the bot needs to reply
-            print("'#summoned' found --> sending bot reply") 
+            print("'#summoned' found --> sending bot reply") #prints to the console when the condition is met
             api.update_status(status = 'You Called?', in_reply_to_status_id = mention.id, auto_populate_reply_metadata=True) #tweets the tweet
